@@ -3,6 +3,31 @@ import torch.nn as nn
 from opt_einsum import contract
 from long_seq import process_long_input
 from losses import ATLoss
+import torch.nn.functional as F
+
+
+class linear_attention(nn.Module):
+    def __init__(self, in_dim, num_class):
+        super(linear_attention, self).__init__()
+        self.layerQ = nn.Linear(in_dim, in_dim)
+        self.layerK = nn.Linear(num_class, in_dim)
+        self.layerV = nn.Linear(num_class, in_dim)
+        self.initialize()
+
+    def initialize(self):
+        self.layerQ.reset_parameters()
+        self.layerK.reset_parameters()
+        self.layerV.reset_parameters()
+
+    def forward(self, pair_emb, label_emb, tau=0.5):
+        # pdb.set_trace()
+        Q = self.layerQ(pair_emb)
+        K = self.layerK(label_emb)
+        V = self.layerV(label_emb)
+        attention_score = torch.matmul(Q, K.transpose(-2, -1))
+        attention_weight = F.softmax(attention_score * tau, dim=1)
+        z = torch.matmul(attention_weight, V)
+        return z
 
 
 class DocREModel(nn.Module):
@@ -13,6 +38,10 @@ class DocREModel(nn.Module):
         self.hidden_size = config.hidden_size
         self.loss_fnt = ATLoss()
 
+        label = torch.tensor(list(range(config.num_labels)))
+        self.label_oh = F.one_hot(label)
+
+        self.label_attentive = linear_attention(config.hidden_size, config.num_labels)
         self.head_extractor = nn.Linear(2 * config.hidden_size, emb_size)
         self.tail_extractor = nn.Linear(2 * config.hidden_size, emb_size)
         self.bilinear = nn.Linear(emb_size * block_size, config.num_labels)
@@ -97,6 +126,11 @@ class DocREModel(nn.Module):
 
         sequence_output, attention = self.encode(input_ids, attention_mask)
         hs, rs, ts = self.get_hrt(sequence_output, attention, entity_pos, hts)
+
+        rs = self.label_attentive(
+            pair_emb=rs,
+            label_emb=self.label_oh.to(sequence_output),
+        )
 
         hs = torch.tanh(self.head_extractor(torch.cat([hs, rs], dim=1)))
         ts = torch.tanh(self.tail_extractor(torch.cat([ts, rs], dim=1)))
