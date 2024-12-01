@@ -94,11 +94,16 @@ def train(args, model, train_features, dev_features, test_features):
                     # print(dev_output)
                     if dev_score > best_score:
                         best_score = dev_score
-                        # pred = report(args, model, test_features)
-                        # with open("result.json", "w") as fh:
-                        #     json.dump(pred, fh)
-                        # if args.save_path != "":
-                        #     torch.save(model.state_dict(), args.save_path)
+                        pred = report(args, model, dev_features)
+                        with open(
+                            f"/home2/csh102/DocRE/ATLOP/pred/{args.file_name}_pred.json",
+                            "w",
+                        ) as fh:
+                            json.dump(pred, fh)
+                        torch.save(
+                            model.state_dict(),
+                            f"/home2/csh102/DocRE/ATLOP/model/{args.file_name}.pt",
+                        )
             batch_num = len(train_dataloader)
             total_loss = total_loss / batch_num
             logging(
@@ -169,7 +174,7 @@ def evaluate(args, model, features, tag="dev"):
         tag + "_F1": best_f1 * 100,
         tag + "_F1_ign": best_f1_ign * 100,
     }
-    return best_f1, output
+    return best_f1 * 100, output
 
 
 def report(args, model, features):
@@ -324,6 +329,8 @@ def main():
     set_seed(args)
     model = DocREModel(config, model, num_labels=args.num_labels)
     model.to(args.device)
+
+    args.file_name = "LAD"
 
     if args.load_path == "":  # Training
         train(args, model, train_features, dev_features, dev_features)
