@@ -5,7 +5,9 @@ import os
 import numpy as np
 import torch
 import ujson as json
-from apex import amp
+from torch.cuda.amp import GradScaler
+
+# from apex import amp
 from torch.utils.data import DataLoader
 from transformers import (
     AutoConfig,
@@ -52,6 +54,7 @@ def train(
         scheduler = get_linear_schedule_with_warmup(
             optimizer, num_warmup_steps=warmup_steps, num_training_steps=total_steps
         )
+        scaler = GradScaler()
         print("Total steps: {}".format(total_steps))
         print("Warmup steps: {}".format(warmup_steps))
         if args.evrt:
@@ -85,6 +88,7 @@ def train(
                 }
                 outputs = model(**inputs)
                 loss = outputs[0] / args.gradient_accumulation_steps
+                scaler.scale(loss).backward()
 
                 if args.evrt:
                     crt_batch = collate_fn(
@@ -114,16 +118,17 @@ def train(
                         / args.gradient_accumulation_steps
                     )
 
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
+                # with amp.scale_loss(loss, optimizer) as scaled_loss:
+                #     scaled_loss.backward()
                 if (step + 1) % args.gradient_accumulation_steps == 0 or step == len(
                     train_dataloader
                 ) - 1:
                     if args.max_grad_norm > 0:
                         torch.nn.utils.clip_grad_norm_(
-                            amp.master_params(optimizer), args.max_grad_norm
+                            model.parameters(), args.max_grad_norm
                         )
-                    optimizer.step()
+                    scaler.step(optimizer)
+                    scaler.update()
                     scheduler.step()
                     model.zero_grad()
                     num_steps += 1
@@ -142,7 +147,7 @@ def train(
                         best_epoch = epoch + 1
                         torch.save(
                             model.state_dict(),
-                            os.path.join(args.output_dir, "model.pth"),
+                            f"/home2/csh102/DocRE/ATLOP/model/{args.file_name}.pt",
                         )
                     if direct_test(args.data_dir):
                         test_score, test_output = evaluate(
@@ -153,10 +158,7 @@ def train(
                     else:
                         pred = report(args, model, test_features, rel2id, id2rel)
                         with open(
-                            os.path.join(
-                                args.output_dir,
-                                "result_epoch={}.json".format(epoch + 1),
-                            ),
+                            f"/home2/csh102/DocRE/ATLOP/pred/{args.file_name}_pred.json",
                             "w",
                         ) as fh:
                             json.dump(pred, fh)
@@ -379,8 +381,8 @@ def main():
 
     args = parser.parse_args()
 
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
+    # if not os.path.exists(args.output_dir):
+    #     os.makedirs(args.output_dir)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     args.n_gpu = torch.cuda.device_count()
@@ -450,9 +452,11 @@ def main():
     set_seed(args)
     model = DocREModel(args, config, model)
     model.to(device)
+    args.file_name = "ATLOP_ENV"
+    print(args)
 
     if args.only_test:
-        model = amp.initialize(model, opt_level="O1", verbosity=0)
+        # model = amp.initialize(model, opt_level="O1", verbosity=0)
         if args.load_path != "":
             model.load_state_dict(torch.load(args.load_path))
         dev_score, dev_output = evaluate(
@@ -492,7 +496,7 @@ def main():
         optimizer = AdamW(
             optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon
         )
-        model, optimizer = amp.initialize(model, optimizer, opt_level="O1", verbosity=0)
+        # model, optimizer = amp.initialize(model, optimizer, opt_level="O1", verbosity=0)
         if args.load_path != "":
             model.load_state_dict(torch.load(args.load_path))
         train(

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from opt_einsum import contract
 from long_seq import process_long_input
-from losses import ClsLoss
+from losses import ClsLoss, ATLoss
 
 
 class DocREModel(nn.Module):
@@ -10,9 +10,7 @@ class DocREModel(nn.Module):
         super().__init__()
         self.config = config
         self.model = model
-        self.loss_fnt = ClsLoss(
-            shift=args.clsloss_shift, regularization=args.clsloss_reg
-        )
+        self.loss_fnt = ATLoss()
 
         self.head_extractor = nn.Linear(2 * config.hidden_size, config.hidden_size)
         self.tail_extractor = nn.Linear(2 * config.hidden_size, config.hidden_size)
