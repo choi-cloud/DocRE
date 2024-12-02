@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=1 
-#SBATCH --partition=edu1
+#SBATCH --partition=gpu1
 #SBATCH --cpus-per-task=48
 #SBATCH --gres=gpu:4
 #SBATCH --job-name=DRE
