@@ -420,7 +420,7 @@ def main():
             train_features, os.path.join(args.data_dir, args.train_file + suffix)
         )
         print("Created and saved new train features")
-    if os.path.exists(os.path.join(args.data_dir, args.dev_file + suffix)):
+    if False and os.path.exists(os.path.join(args.data_dir, args.dev_file + suffix)):
         dev_features = torch.load(os.path.join(args.data_dir, args.dev_file + suffix))
         print("Loaded dev features")
     else:
@@ -428,18 +428,18 @@ def main():
         dev_features = read(
             dev_file, rel2id, tokenizer, max_seq_length=args.max_seq_length
         )
-        torch.save(dev_features, os.path.join(args.data_dir, args.dev_file + suffix))
-        print("Created and saved new dev features")
-    if os.path.exists(os.path.join(args.data_dir, args.test_file + suffix)):
+        # torch.save(dev_features, os.path.join(args.data_dir, args.dev_file + suffix))
+        # print("Created and saved new dev features")
+    if False and os.path.exists(os.path.join(args.data_dir, args.test_file + suffix)):
         test_features = torch.load(os.path.join(args.data_dir, args.test_file + suffix))
         print("Loaded test features")
     else:
         test_file = os.path.join(args.data_dir, args.test_file)
-        test_features = read(
-            test_file, rel2id, tokenizer, max_seq_length=args.max_seq_length
-        )
-        torch.save(test_features, os.path.join(args.data_dir, args.test_file + suffix))
-        print("Created and saved new test features")
+        # test_features = read(
+        #     test_file, rel2id, tokenizer, max_seq_length=args.max_seq_length
+        # )
+        # torch.save(test_features, os.path.join(args.data_dir, args.test_file + suffix))
+        # print("Created and saved new test features")
 
     model = AutoModel.from_pretrained(
         args.model_name_or_path,
@@ -454,7 +454,7 @@ def main():
     set_seed(args)
     model = DocREModel(args, config, model)
     model.to(device)
-    args.file_name = "ATLOP_ENV"
+    args.file_name = "LAD_ENV"
     print(args)
 
     if args.only_test:
@@ -468,12 +468,12 @@ def main():
         print(dev_output)
         if direct_test(args.data_dir):
             test_score, test_output = evaluate(
-                args, model, test_features, rel2id, id2rel, tag="test"
+                args, model, dev_features, rel2id, id2rel, tag="test"
             )
             print("Test results:")
             print(test_output)
         else:
-            pred = report(args, model, test_features, rel2id, id2rel)
+            pred = report(args, model, dev_features, rel2id, id2rel)
             with open(os.path.join(args.output_dir, "result.json"), "w") as fh:
                 json.dump(pred, fh)
     else:
@@ -507,7 +507,7 @@ def main():
             optimizer,
             train_features,
             dev_features,
-            test_features,
+            dev_features,
             rel2id,
             id2rel,
             tokenizer,
