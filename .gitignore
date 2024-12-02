@@ -1,5 +1,7 @@
 *.json
 *.pyc
 *.npy
+*.pt
+
 slurm/
 docred/
