@@ -11,22 +11,19 @@ class linear_attention(nn.Module):
         super(linear_attention, self).__init__()
         self.layerQ = nn.Linear(in_dim, in_dim)
         self.layerK = nn.Linear(num_class, in_dim)
-        self.layerV = nn.Linear(num_class, in_dim)
         self.initialize()
 
     def initialize(self):
         self.layerQ.reset_parameters()
         self.layerK.reset_parameters()
-        self.layerV.reset_parameters()
 
     def forward(self, pair_emb, label_emb, tau=0.5):
         # pdb.set_trace()
         Q = self.layerQ(pair_emb)
         K = self.layerK(label_emb)
-        V = self.layerV(label_emb)
         attention_score = torch.matmul(Q, K.transpose(-2, -1))
         attention_weight = F.softmax(attention_score * tau, dim=1)
-        z = torch.matmul(attention_weight, V)
+        z = torch.matmul(attention_weight, K)
         return z
 
 
