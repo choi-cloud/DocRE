@@ -399,7 +399,9 @@ def main():
     suffix = ".{}.pt".format(args.model_name_or_path.split("/")[-1].strip())
     read = read_docred
     with open(
-        os.path.join(args.data_dir, args.rel2id_file), "r", encoding="utf-8"
+        "/home2/csh102/DocRE/docred/meta/rel2id.json",
+        "r",
+        encoding="utf-8",
     ) as f:
         rel2id = json.load(f)
     id2rel = {value: key for key, value in rel2id.items()}

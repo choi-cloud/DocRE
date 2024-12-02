@@ -15,14 +15,12 @@ echo "--------------------------------------"
 module unload CUDA/11.2.2 
 module load cuda/11.3.1
 
-/home2/csh102/anaconda3/envs/240504-gnn-survey/bin/python /home2/csh102/DocRE/Env-DocRE/evrt/train.py \
+/home2/csh102/anaconda3/envs/240504-gnn-survey/bin/python /home2/csh102/DocRE/Env-DocRE/evrt/main.py \
     --data_dir /home2/csh102/DocRE/docred \
     --train_file train_annotated.json \
     --evrt_file evrt.json \
     --dev_file dev_env.json \
     --test_file dev_env.json \
-    --rel2id_file rel2id.json \
-    --output_dir ${log_file_name} \
     \
     --transformer_type bert \
     --model_name_or_path bert-base-cased \
