@@ -18,8 +18,8 @@ module load cuda/11.3.1
 /home2/csh102/anaconda3/envs/240504-gnn-survey/bin/python /home2/csh102/DocRE/ATLOP/code/train.py \
     --data_dir /home2/csh102/DocRE/docred \
     --train_file train_annotated.json \
-    --dev_file dev.json \
-    --test_file dev.json \
+    --dev_file dev_env.json \
+    --test_file dev_env.json \
     \
     --transformer_type bert \
     --model_name_or_path bert-base-cased \

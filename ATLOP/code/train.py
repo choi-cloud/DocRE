@@ -328,8 +328,10 @@ def main():
     model = DocREModel(config, model, num_labels=args.num_labels)
     model.to(args.device)
 
-    args.file_name = "LAD_without_V"
-    logging(args)
+    args.file_name = "LAD_ENV"
+    message = "ENV 데이터셋에 대한 LAD의 성능을 확인하고자 함. ATLOP보다 높다면 링크를 고려한 c'이 c보다 robustness 향상에 도움을 준 것이라 판단할 수 있음."
+    print(args)
+    print(message)
 
     if args.load_path == "":  # Training
         train(args, model, train_features, dev_features, dev_features)
