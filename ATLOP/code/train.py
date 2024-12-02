@@ -325,6 +325,11 @@ def main():
     model = DocREModel(config, model, num_labels=args.num_labels)
     model.to(args.device)
 
+    message = "ENV-DocRED에 대한 ATLOP의 성능 평가"
+    args.file_name = "ATLOP_ENV"
+    print(args)
+    print(message)
+
     if args.load_path == "":  # Training
         train(args, model, train_features, dev_features, dev_features)
     else:  # Testing
@@ -338,5 +343,5 @@ def main():
 
 
 if __name__ == "__main__":
-    print("hello new branch")
+    # print("hello new branch")
     main()
