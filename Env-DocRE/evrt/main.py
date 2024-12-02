@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import ujson as json
 from torch.cuda.amp import GradScaler
+from tqdm import tqdm
 
 # from apex import amp
 from torch.utils.data import DataLoader
@@ -77,7 +78,7 @@ def train(
             }
         for epoch in train_iterator:
             model.zero_grad()
-            for step, batch in enumerate(train_dataloader):
+            for step, batch in enumerate(tqdm(train_dataloader, desc="Train")):
                 model.train()
                 inputs = {
                     "input_ids": batch[0].to(args.device),
