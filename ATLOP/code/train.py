@@ -297,8 +297,6 @@ def main():
     args.n_gpu = torch.cuda.device_count()
     args.device = device
 
-    logging(args)
-
     config = AutoConfig.from_pretrained(
         args.config_name if args.config_name else args.model_name_or_path,
         num_labels=args.num_class,
@@ -330,7 +328,8 @@ def main():
     model = DocREModel(config, model, num_labels=args.num_labels)
     model.to(args.device)
 
-    args.file_name = "LAD"
+    args.file_name = "LAD_without_V"
+    logging(args)
 
     if args.load_path == "":  # Training
         train(args, model, train_features, dev_features, dev_features)
